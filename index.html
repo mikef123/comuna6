@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Coincidir — Comuna 6.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,340;0,700;1,340&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0908;
+    --ink:#f4ede1;
+    --ink-dim:#9c8f7a;
+    --accent:#d1a05c;
+    --accent-rgb:209,160,92;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope', sans-serif;
+  }
+
+  #stage{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100dvh;
+    background:var(--bg);
+    touch-action:none;
+    overflow:hidden;
+  }
+
+  canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .layer{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    width:min(92vw, 640px);
+    pointer-events:none;
+  }
+
+  #hint{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, 90px);
+    font-size:0.72rem;
+    font-weight:400;
+    color:var(--ink-dim);
+    letter-spacing:0.14em;
+    opacity:0;
+    transition:opacity 700ms ease;
+    pointer-events:none;
+  }
+  #hint.visible{ animation:pulseHint 2.6s ease-in-out infinite; }
+  #hint.hiding{ opacity:0 !important; animation:none !important; }
+  @keyframes pulseHint{
+    0%,100%{ opacity:0.3; }
+    50%{ opacity:0.8; }
+  }
+
+  #path-message{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:340;
+    font-size:clamp(1.15rem, 4.6vw, 1.85rem);
+    color:var(--ink);
+    letter-spacing:0.01em;
+    line-height:1.4;
+    opacity:0;
+    transition:opacity 650ms ease;
+  }
+
+  #bloom{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:82vmin;
+    height:82vmin;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(var(--accent-rgb),0.62) 0%, rgba(var(--accent-rgb),0) 66%);
+    opacity:0;
+    pointer-events:none;
+  }
+
+  #amistad-text{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-style:normal;
+    font-size:clamp(3.6rem, 21vw, 9.2rem);
+    letter-spacing:-0.01em;
+    line-height:1;
+    color:var(--ink);
+    opacity:0;
+    white-space:nowrap;
+  }
+
+  #message-main{
+    margin-top:clamp(1.7rem, 6vh, 2.6rem);
+    font-family:'Manrope', sans-serif;
+    font-weight:400;
+    font-size:clamp(1.02rem, 3.7vw, 1.22rem);
+    line-height:1.7;
+    color:var(--ink);
+    max-width:360px;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity 1200ms ease, transform 1200ms ease;
+  }
+
+  #message-secondary{
+    margin-top:clamp(0.9rem, 3vh, 1.3rem);
+    font-family:'Manrope', sans-serif;
+    font-weight:300;
+    font-size:clamp(0.88rem, 3vw, 1rem);
+    color:var(--ink-dim);
+    opacity:0;
+    transition:opacity 1000ms ease;
+  }
+
+  #signature{
+    margin-top:clamp(1.8rem, 6.5vh, 2.8rem);
+    font-family:'Manrope', sans-serif;
+    font-weight:400;
+    font-size:0.82rem;
+    letter-spacing:0.05em;
+    color:var(--accent);
+    opacity:0;
+    transition:opacity 900ms ease;
+  }
+
+  .visible{ opacity:1 !important; }
+  #message-main.visible{ transform:translateY(0); }
+
+  #amistad-text.breathe{ animation:breathe 5s ease-in-out infinite; }
+  @keyframes breathe{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.93; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #hint.visible{ animation:none; }
+    #amistad-text.breathe{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="canvas"></canvas>
+
+  <div id="hint">toca para continuar</div>
+
+  <div class="layer" id="phase-paths">
+    <div id="path-message"></div>
+  </div>
+
+  <div id="bloom"></div>
+
+  <div class="layer" id="phase-reveal">
+    <div id="amistad-text">AMISTAD</div>
+    <div id="message-main">De todas las personas que pueden cruzarse en el camino, qué bonito coincidir contigo.</div>
+    <div id="message-secondary">Gracias por ser parte del camino.</div>
+    <div id="signature">Comuna 6.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var hintEl = document.getElementById('hint');
+  var pathMessageEl = document.getElementById('path-message');
+  var bloomEl = document.getElementById('bloom');
+  var amistadEl = document.getElementById('amistad-text');
+  var messageMainEl = document.getElementById('message-main');
+  var messageSecondaryEl = document.getElementById('message-secondary');
+  var signatureEl = document.getElementById('signature');
+
+  var W = 0, H = 0, DPR = 1;
+  var lines = [];       // the two paths
+  var particles = [];   // dust that becomes AMISTAD
+  var flashes = [];     // crossing / reveal pulses
+  var dotsVisible = 1;
+  var running = true;
+  var audioCtx = null;
+
+  function resize(){
+    W = window.innerWidth;
+    H = window.innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ---------- helpers ----------
+  function sleep(ms){
+    if (REDUCED) ms = Math.min(ms, 90);
+    return new Promise(function(res){ setTimeout(res, ms); });
+  }
+
+  function animate(duration, easing, onFrame){
+    if (REDUCED) duration = Math.min(duration, 160);
+    return new Promise(function(resolve){
+      var start = null;
+      function step(now){
+        if (start === null) start = now;
+        var t = Math.min(1, (now - start) / duration);
+        onFrame(easing(t));
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  var easeOutCubic = function(t){ return 1 - Math.pow(1 - t, 3); };
+  var easeInOutCubic = function(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; };
+  var lerp = function(a,b,t){ return a + (b - a) * t; };
+
+  function waitForFirstInteraction(timeoutMs){
+    return new Promise(function(resolve){
+      var done = false;
+      function finish(byUser){
+        if (done) return;
+        done = true;
+        document.removeEventListener('pointerdown', onPointer);
+        clearTimeout(timer);
+        resolve(byUser);
+      }
+      function onPointer(){ finish(true); }
+      document.addEventListener('pointerdown', onPointer, { once:true });
+      var timer = setTimeout(function(){ finish(false); }, timeoutMs);
+    });
+  }
+
+  function playChime(){
+    if (!audioCtx) return;
+    try{
+      var t0 = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(349.23, t0);
+      osc.frequency.exponentialRampToValueAtTime(523.25, t0 + 0.6);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.055, t0 + 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.05);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 1.1);
+    }catch(e){}
+  }
+
+  // ---------- render loop ----------
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    // paths
+    for (var i = 0; i < lines.length; i++){
+      var ln = lines[i];
+      var op = ln.opacity * dotsVisible;
+      if (op <= 0.003) continue;
+      var ex = lerp(ln.x1, ln.x2, ln.progress);
+      var ey = lerp(ln.y1, ln.y2, ln.progress);
+      ctx.beginPath();
+      ctx.moveTo(ln.x1, ln.y1);
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = 'rgba(' + ln.rgb + ',' + op.toFixed(3) + ')';
+      ctx.lineWidth = ln.width;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(' + ln.rgb + ',' + (op * 0.5).toFixed(3) + ')';
+      ctx.shadowBlur = 9;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // flashes / pulses
+    for (var f = 0; f < flashes.length; f++){
+      var fl = flashes[f];
+      if (fl.opacity <= 0.003) continue;
+      ctx.beginPath();
+      ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(' + ACCENT_RGB + ',' + fl.opacity.toFixed(3) + ')';
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+    }
+
+    // particles (the dust that becomes AMISTAD)
+    for (var p2 = 0; p2 < particles.length; p2++){
+      var pt = particles[p2];
+      var pop = pt.opacity * dotsVisible;
+      if (pop <= 0.003) continue;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244,237,225,' + pop.toFixed(3) + ')';
+      ctx.shadowColor = 'rgba(' + ACCENT_RGB + ',' + (pop * 0.55).toFixed(3) + ')';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  var ACCENT_RGB = '209,160,92';
+
+  function loop(){
+    if (!running) return;
+    draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---------- geometry ----------
+  function segmentIntersection(x1,y1,x2,y2,x3,y3,x4,y4){
+    var denom = (y4-y3)*(x2-x1) - (x4-x3)*(y2-y1);
+    if (Math.abs(denom) < 1e-6) return null;
+    var ua = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / denom;
+    var ub = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / denom;
+    return { ua: ua, ub: ub, x: x1 + ua*(x2-x1), y: y1 + ua*(y2-y1) };
+  }
+
+  // ---------- word sampling ----------
+  function sampleWord(el, cap){
+    var rect = el.getBoundingClientRect();
+    var cs = window.getComputedStyle(el);
+    var w = Math.max(10, Math.ceil(rect.width));
+    var h = Math.max(10, Math.ceil(rect.height));
+
+    var off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    var octx = off.getContext('2d');
+    octx.clearRect(0,0,w,h);
+    octx.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + '/' + cs.lineHeight + ' ' + cs.fontFamily;
+    octx.textBaseline = 'middle';
+    octx.textAlign = 'left';
+    octx.fillStyle = '#fff';
+    octx.fillText(el.textContent, 0, h / 2);
+
+    var data;
+    try { data = octx.getImageData(0, 0, w, h).data; }
+    catch(e){ return []; }
+
+    var stride = 5;
+    var pts = [];
+    for (var y = 0; y < h; y += stride){
+      for (var x = 0; x < w; x += stride){
+        var idx = (y * w + x) * 4 + 3;
+        if (data[idx] > 120){
+          pts.push({ x: rect.left + x, y: rect.top + y });
+        }
+      }
+    }
+
+    if (pts.length > cap){
+      var out = [];
+      var step = pts.length / cap;
+      for (var i2 = 0; i2 < cap; i2++){
+        out.push(pts[Math.floor(i2 * step)]);
+      }
+      return out;
+    }
+    return pts;
+  }
+
+  function pointAlong(x1,y1,x2,y2,t){
+    return { x: lerp(x1,x2,t), y: lerp(y1,y2,t) };
+  }
+
+  function doBloomFlash(){
+    animate(230, easeOutCubic, function(t){
+      bloomEl.style.opacity = (t * 0.85).toFixed(3);
+    }).then(function(){
+      return animate(950, easeOutCubic, function(t){
+        bloomEl.style.opacity = (0.85 * (1 - t)).toFixed(3);
+      });
+    });
+  }
+
+  // ---------- scenes ----------
+  async function sceneInvitation(){
+    hintEl.classList.add('visible');
+    var tapped = await waitForFirstInteraction(REDUCED ? 400 : 4200);
+    if (tapped){
+      try{
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }catch(e){}
+    }
+    hintEl.classList.remove('visible');
+    hintEl.classList.add('hiding');
+    await sleep(260);
+  }
+
+  async function scenePaths(){
+    var margin = Math.min(W, H) * 0.1;
+
+    var lineA = {
+      x1: margin, y1: H - margin,
+      x2: W - margin, y2: margin,
+      progress: 0, opacity: 0, width: 1.4, rgb: ACCENT_RGB
+    };
+    var lineB = {
+      x1: W - margin, y1: H - margin * 1.05,
+      x2: margin, y2: margin * 1.05,
+      progress: 0, opacity: 0, width: 1.4, rgb: ACCENT_RGB
+    };
+    lines.push(lineA, lineB);
+
+    var xsect = segmentIntersection(
+      lineA.x1, lineA.y1, lineA.x2, lineA.y2,
+      lineB.x1, lineB.y1, lineB.x2, lineB.y2
+    );
+    var tA = xsect ? Math.max(0, Math.min(1, xsect.ua)) : 0.5;
+    var tB = xsect ? Math.max(0, Math.min(1, xsect.ub)) : 0.5;
+    var crossX = xsect ? xsect.x : W/2;
+    var crossY = xsect ? xsect.y : H/2;
+
+    var DUR = 1550;
+    var STAGGER = 480;
+    var t0 = performance.now();
+
+    var doneA = animate(DUR, easeInOutCubic, function(t){
+      lineA.progress = t;
+      lineA.opacity = t;
+    });
+
+    await sleep(STAGGER);
+
+    var doneB = animate(DUR, easeInOutCubic, function(t){
+      lineB.progress = t;
+      lineB.opacity = t;
+    });
+
+    pathMessageEl.textContent = 'Entre tantos caminos...';
+    pathMessageEl.classList.add('visible');
+
+    var crossTimeA = DUR * tA;
+    var crossTimeB = STAGGER + DUR * tB;
+    var crossTime = Math.max(crossTimeA, crossTimeB);
+    var elapsed = performance.now() - t0;
+    await sleep(Math.max(0, crossTime - elapsed));
+
+    // the exact moment the two paths meet
+    playChime();
+    pathMessageEl.classList.remove('visible');
+
+    var flash = { x: crossX, y: crossY, r: 0, opacity: 0.6 };
+    flashes.push(flash);
+    animate(750, easeOutCubic, function(t){
+      flash.r = t * 46;
+      flash.opacity = 0.6 * (1 - t);
+    });
+    var flash2 = { x: crossX, y: crossY, r: 0, opacity: 0.35 };
+    flashes.push(flash2);
+    sleep(220).then(function(){
+      animate(800, easeOutCubic, function(t){
+        flash2.r = t * 60;
+        flash2.opacity = 0.35 * (1 - t);
+      });
+    });
+
+    await sleep(260);
+    pathMessageEl.textContent = 'Qué bonito coincidir.';
+    pathMessageEl.classList.add('visible');
+
+    await Promise.all([doneA, doneB]);
+    await sleep(1450);
+
+    pathMessageEl.classList.remove('visible');
+    await sleep(500);
+
+    return { lineA: lineA, lineB: lineB };
+  }
+
+  async function sceneTransformation(pathsData){
+    animate(500, easeInOutCubic, function(t){
+      pathsData.lineA.opacity = 1 - t;
+      pathsData.lineB.opacity = 1 - t;
+    });
+
+    // dust sampled from the paths themselves — the lines become the letters
+    var sourcePoints = [];
+    var perLine = 42;
+    for (var i = 0; i <= perLine; i++){
+      var t = i / perLine;
+      var a = pointAlong(pathsData.lineA.x1, pathsData.lineA.y1, pathsData.lineA.x2, pathsData.lineA.y2, t);
+      var b = pointAlong(pathsData.lineB.x1, pathsData.lineB.y1, pathsData.lineB.x2, pathsData.lineB.y2, t);
+      sourcePoints.push(a, b);
+    }
+
+    var pts = sourcePoints.map(function(s){
+      return { x: s.x, y: s.y, r: 2.1, opacity: 0 };
+    });
+    particles = pts;
+
+    await animate(420, easeOutCubic, function(t){
+      for (var i2 = 0; i2 < pts.length; i2++){ pts[i2].opacity = t * 0.85; }
+    });
+
+    var samples = sampleWord(amistadEl, Math.min(pts.length, 190));
+    if (samples.length === 0){
+      await sleep(200);
+      amistadEl.style.transition = 'none';
+      doBloomFlash();
+      await animate(560, easeOutCubic, function(t){
+        dotsVisible = 1 - t;
+        amistadEl.style.opacity = t;
+      });
+      amistadEl.classList.add('visible', 'breathe');
+      return;
+    }
+
+    // if we need more dust than the paths gave us, spawn extra near the crossing/centroid
+    var cx = 0, cy = 0;
+    for (var c = 0; c < pts.length; c++){ cx += pts[c].x; cy += pts[c].y; }
+    cx /= pts.length; cy /= pts.length;
+
+    var needed = samples.length - pts.length;
+    for (var n = 0; n < needed; n++){
+      pts.push({
+        x: cx + (Math.random() - 0.5) * 60,
+        y: cy + (Math.random() - 0.5) * 60,
+        r: 2,
+        opacity: 0
+      });
+    }
+    particles = pts;
+
+    pts.sort(function(a,b){ return a.x - b.x; });
+    samples.sort(function(a,b){ return a.x - b.x; });
+
+    for (var k = 0; k < pts.length; k++){
+      pts[k].startX = pts[k].x;
+      pts[k].startY = pts[k].y;
+      pts[k].startOpacity = pts[k].opacity;
+      var s = samples[Math.min(k, samples.length - 1)];
+      pts[k].tx = s.x;
+      pts[k].ty = s.y;
+    }
+
+    await animate(1100, easeInOutCubic, function(t){
+      for (var m = 0; m < pts.length; m++){
+        var pt = pts[m];
+        pt.x = lerp(pt.startX, pt.tx, t);
+        pt.y = lerp(pt.startY, pt.ty, t);
+        pt.r = lerp(pt.r, 2, t * 0.4);
+        pt.opacity = lerp(pt.startOpacity, 0.9, Math.min(1, t * 1.4));
+      }
+    });
+
+    await sleep(140);
+
+    amistadEl.style.transition = 'none';
+    doBloomFlash();
+    await animate(560, easeOutCubic, function(t){
+      dotsVisible = 1 - t;
+      amistadEl.style.opacity = t;
+    });
+
+    amistadEl.classList.add('visible', 'breathe');
+  }
+
+  async function sceneMessages(){
+    await sleep(1150);
+    messageMainEl.classList.add('visible');
+
+    await sleep(1500);
+    messageSecondaryEl.classList.add('visible');
+
+    await sleep(1000);
+    signatureEl.classList.add('visible');
+  }
+
+  async function run(){
+    try{
+      if (document.fonts && document.fonts.ready){
+        await Promise.race([document.fonts.ready, sleep(1200)]);
+      }
+    }catch(e){}
+
+    await sceneInvitation();
+    var pathsData = await scenePaths();
+    await sceneTransformation(pathsData);
+    await sceneMessages();
+  }
+
+  run();
+})();
+</script>
+</body>
+</html>
