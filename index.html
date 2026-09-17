@@ -294,12 +294,12 @@
       var now = audioCtx.currentTime;
       var master = audioCtx.createGain();
       master.gain.setValueAtTime(0, now);
-      master.gain.linearRampToValueAtTime(0.03, now + 2.2);
+      master.gain.linearRampToValueAtTime(0.065, now + 2.0);
 
       var filter = audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(950, now);
-      filter.Q.setValueAtTime(0.6, now);
+      filter.frequency.setValueAtTime(1500, now);
+      filter.Q.setValueAtTime(0.5, now);
 
       master.connect(filter).connect(audioCtx.destination);
 
@@ -329,7 +329,7 @@
       g.cancelScheduledValues(now);
       g.setValueAtTime(g.value, now);
       g.linearRampToValueAtTime(peak, now + riseMs / 1000);
-      g.linearRampToValueAtTime(0.03, now + riseMs / 1000 + fallMs / 1000);
+      g.linearRampToValueAtTime(0.065, now + riseMs / 1000 + fallMs / 1000);
     }catch(e){}
   }
 
@@ -344,6 +344,46 @@
         pad.oscs[i].osc.stop(now + fadeMs / 1000 + 0.05);
       }
     }catch(e){}
+  }
+
+  // a small warm melodic motif that moves across the story — D major pentatonic
+  function playNote(freq, delayMs, durMs, peakGain){
+    if (!audioCtx) return;
+    try{
+      var t0 = audioCtx.currentTime + delayMs / 1000;
+      var dur = durMs / 1000;
+
+      var fund = audioCtx.createOscillator();
+      fund.type = 'sine';
+      fund.frequency.setValueAtTime(freq, t0);
+
+      var shimmer = audioCtx.createOscillator();
+      shimmer.type = 'triangle';
+      shimmer.frequency.setValueAtTime(freq * 2, t0);
+
+      var fundGain = audioCtx.createGain();
+      var shimGain = audioCtx.createGain();
+      fundGain.gain.setValueAtTime(0, t0);
+      shimGain.gain.setValueAtTime(0, t0);
+
+      var attack = Math.min(0.35, dur * 0.3);
+      fundGain.gain.linearRampToValueAtTime(peakGain, t0 + attack);
+      fundGain.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+      shimGain.gain.linearRampToValueAtTime(peakGain * 0.28, t0 + attack);
+      shimGain.gain.exponentialRampToValueAtTime(0.0008, t0 + dur * 0.85);
+
+      fund.connect(fundGain).connect(audioCtx.destination);
+      shimmer.connect(shimGain).connect(audioCtx.destination);
+
+      fund.start(t0); fund.stop(t0 + dur + 0.05);
+      shimmer.start(t0); shimmer.stop(t0 + dur + 0.05);
+    }catch(e){}
+  }
+
+  function playChordSwell(freqs, delayMs, durMs, peakGain){
+    for (var i = 0; i < freqs.length; i++){
+      playNote(freqs[i], delayMs, durMs, peakGain);
+    }
   }
 
   function draw(){
@@ -454,8 +494,8 @@
   }
 
   function doBloomFlash(){
-    swellPad(0.095, 250, 1300);
-    playChime();
+    swellPad(0.19, 280, 1500);
+    playChordSwell([293.66, 369.99, 440.0, 587.33], 0, 1900, 0.14); // D-F#-A-D — the arrival
     animate(220, easeOutCubic, function(t){
       bloomEl.style.opacity = (t * 0.9).toFixed(3);
     }).then(function(){
@@ -474,6 +514,7 @@
         var Ctx = window.AudioContext || window.webkitAudioContext;
         if (Ctx) audioCtx = new Ctx();
         startPad();
+        playNote(293.66, 200, 1500, 0.1); // D4 — the piece begins to breathe
       }catch(e){}
     }
     hintEl.classList.remove('visible');
@@ -528,28 +569,31 @@
     await Promise.all([doneA, doneB]);
     await sleep(220);
 
+    swellPad(0.13, 300, 1200);
+    playNote(369.99, 0, 1300, 0.11); // F#4 — the crossing
+
+    // dim the paths so they never compete with the text sitting on top of them
+    await animate(420, easeOutCubic, function(t){
+      lineA.opacity = 1 - t * 0.74;
+      lineB.opacity = 1 - t * 0.74;
+    });
+
     pathMessageEl.textContent = 'A veces no hace falta decir mucho...';
     pathMessageEl.classList.add('visible');
-    await sleep(1250);
+    await sleep(1500);
 
     pathMessageEl.classList.remove('visible');
-    await sleep(450);
-
-    pathMessageEl.classList.add('weighted');
-    pathMessageEl.textContent = 'Solo gracias.';
-    pathMessageEl.classList.add('visible');
-    await sleep(950);
-
-    pathMessageEl.classList.remove('visible');
-    await sleep(400);
+    await sleep(550);
 
     return { lineA: lineA, lineB: lineB };
   }
 
   async function sceneReveal(pathsData){
+    var startOpA = pathsData.lineA.opacity;
+    var startOpB = pathsData.lineB.opacity;
     animate(450, easeInOutCubic, function(t){
-      pathsData.lineA.opacity = 1 - t;
-      pathsData.lineB.opacity = 1 - t;
+      pathsData.lineA.opacity = startOpA * (1 - t);
+      pathsData.lineB.opacity = startOpB * (1 - t);
     });
 
     var sourcePoints = [];
@@ -636,9 +680,11 @@
   async function sceneClose(){
     await sleep(850);
     messageSecondaryEl.classList.add('visible');
+    playNote(440.0, 0, 1300, 0.08); // A4
 
     await sleep(1150);
     closingLineEl.classList.add('visible');
+    playNote(587.33, 0, 1600, 0.08); // D5 — resolves the phrase up an octave from where it began
 
     await sleep(1350);
     signatureEl.classList.add('visible');
