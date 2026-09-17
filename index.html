@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>Coincidir — Comuna 6.</title>
+<title>Gracias — Comuna 6.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,340;0,700;1,340&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,340;0,600;0,800;1,340&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0908;
     --ink:#f4ede1;
     --ink-dim:#9c8f7a;
-    --accent:#d1a05c;
-    --accent-rgb:209,160,92;
+    --accent:#dba668;
+    --accent-rgb:219,166,104;
   }
 
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -68,7 +68,7 @@
     color:var(--ink-dim);
     letter-spacing:0.14em;
     opacity:0;
-    transition:opacity 700ms ease;
+    transition:opacity 650ms ease;
     pointer-events:none;
   }
   #hint.visible{ animation:pulseHint 2.6s ease-in-out infinite; }
@@ -82,32 +82,39 @@
     font-family:'Fraunces', serif;
     font-style:italic;
     font-weight:340;
-    font-size:clamp(1.15rem, 4.6vw, 1.85rem);
-    color:var(--ink);
+    font-size:clamp(1.15rem, 4.4vw, 1.5rem);
+    color:var(--ink-dim);
     letter-spacing:0.01em;
-    line-height:1.4;
+    line-height:1.5;
     opacity:0;
-    transition:opacity 650ms ease;
+    transition:opacity 600ms ease, font-size 500ms ease, font-weight 500ms ease, font-style 500ms ease, color 500ms ease;
+  }
+  #path-message.weighted{
+    font-style:normal;
+    font-weight:600;
+    font-size:clamp(2rem, 8.5vw, 3.1rem);
+    color:var(--ink);
+    line-height:1.15;
   }
 
   #bloom{
     position:absolute;
     top:50%;
     left:50%;
-    width:82vmin;
-    height:82vmin;
+    width:84vmin;
+    height:84vmin;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background:radial-gradient(circle, rgba(var(--accent-rgb),0.62) 0%, rgba(var(--accent-rgb),0) 66%);
+    background:radial-gradient(circle, rgba(var(--accent-rgb),0.65) 0%, rgba(var(--accent-rgb),0) 66%);
     opacity:0;
     pointer-events:none;
   }
 
-  #amistad-text{
+  #hero-text{
     font-family:'Fraunces', serif;
-    font-weight:700;
+    font-weight:800;
     font-style:normal;
-    font-size:clamp(3.6rem, 21vw, 9.2rem);
+    font-size:clamp(4rem, 23vw, 9.8rem);
     letter-spacing:-0.01em;
     line-height:1;
     color:var(--ink);
@@ -115,27 +122,26 @@
     white-space:nowrap;
   }
 
-  #message-main{
-    margin-top:clamp(1.7rem, 6vh, 2.6rem);
+  #message-secondary{
+    margin-top:clamp(1.5rem, 5.5vh, 2.3rem);
     font-family:'Manrope', sans-serif;
-    font-weight:400;
-    font-size:clamp(1.02rem, 3.7vw, 1.22rem);
-    line-height:1.7;
+    font-weight:500;
+    font-size:clamp(1.1rem, 4vw, 1.35rem);
     color:var(--ink);
-    max-width:360px;
     opacity:0;
     transform:translateY(6px);
-    transition:opacity 1200ms ease, transform 1200ms ease;
+    transition:opacity 700ms ease, transform 700ms ease;
   }
 
-  #message-secondary{
-    margin-top:clamp(0.9rem, 3vh, 1.3rem);
-    font-family:'Manrope', sans-serif;
-    font-weight:300;
-    font-size:clamp(0.88rem, 3vw, 1rem);
+  #closing-line{
+    margin-top:clamp(1.3rem, 5vh, 2rem);
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:340;
+    font-size:clamp(1.1rem, 4vw, 1.35rem);
     color:var(--ink-dim);
     opacity:0;
-    transition:opacity 1000ms ease;
+    transition:opacity 750ms ease;
   }
 
   #signature{
@@ -146,13 +152,13 @@
     letter-spacing:0.05em;
     color:var(--accent);
     opacity:0;
-    transition:opacity 900ms ease;
+    transition:opacity 800ms ease;
   }
 
   .visible{ opacity:1 !important; }
-  #message-main.visible{ transform:translateY(0); }
+  #message-secondary.visible{ transform:translateY(0); }
 
-  #amistad-text.breathe{ animation:breathe 5s ease-in-out infinite; }
+  #hero-text.breathe{ animation:breathe 5s ease-in-out infinite; }
   @keyframes breathe{
     0%,100%{ opacity:1; }
     50%{ opacity:0.93; }
@@ -160,7 +166,7 @@
 
   @media (prefers-reduced-motion: reduce){
     #hint.visible{ animation:none; }
-    #amistad-text.breathe{ animation:none; }
+    #hero-text.breathe{ animation:none; }
   }
 </style>
 </head>
@@ -178,9 +184,9 @@
   <div id="bloom"></div>
 
   <div class="layer" id="phase-reveal">
-    <div id="amistad-text">AMISTAD</div>
-    <div id="message-main">De todas las personas que pueden cruzarse en el camino, qué bonito coincidir contigo.</div>
-    <div id="message-secondary">Gracias por ser parte del camino.</div>
+    <div id="hero-text">GRACIAS</div>
+    <div id="message-secondary">Por estar.</div>
+    <div id="closing-line">Qué bonito coincidir.</div>
     <div id="signature">Comuna 6.</div>
   </div>
 </div>
@@ -196,18 +202,19 @@
   var hintEl = document.getElementById('hint');
   var pathMessageEl = document.getElementById('path-message');
   var bloomEl = document.getElementById('bloom');
-  var amistadEl = document.getElementById('amistad-text');
-  var messageMainEl = document.getElementById('message-main');
+  var heroEl = document.getElementById('hero-text');
   var messageSecondaryEl = document.getElementById('message-secondary');
+  var closingLineEl = document.getElementById('closing-line');
   var signatureEl = document.getElementById('signature');
 
   var W = 0, H = 0, DPR = 1;
-  var lines = [];       // the two paths
-  var particles = [];   // dust that becomes AMISTAD
-  var flashes = [];     // crossing / reveal pulses
+  var lines = [];
+  var particles = [];
+  var flashes = [];
   var dotsVisible = 1;
   var running = true;
   var audioCtx = null;
+  var ACCENT_RGB = '219,166,104';
 
   function resize(){
     W = window.innerWidth;
@@ -220,7 +227,6 @@
   resize();
   window.addEventListener('resize', resize);
 
-  // ---------- helpers ----------
   function sleep(ms){
     if (REDUCED) ms = Math.min(ms, 90);
     return new Promise(function(res){ setTimeout(res, ms); });
@@ -242,6 +248,7 @@
   }
 
   var easeOutCubic = function(t){ return 1 - Math.pow(1 - t, 3); };
+  var easeOutExpo = function(t){ return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); };
   var easeInOutCubic = function(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; };
   var lerp = function(a,b,t){ return a + (b - a) * t; };
 
@@ -271,7 +278,7 @@
       osc.frequency.setValueAtTime(349.23, t0);
       osc.frequency.exponentialRampToValueAtTime(523.25, t0 + 0.6);
       gain.gain.setValueAtTime(0, t0);
-      gain.gain.linearRampToValueAtTime(0.055, t0 + 0.09);
+      gain.gain.linearRampToValueAtTime(0.06, t0 + 0.09);
       gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.05);
       osc.connect(gain).connect(audioCtx.destination);
       osc.start(t0);
@@ -279,11 +286,69 @@
     }catch(e){}
   }
 
-  // ---------- render loop ----------
+  var pad = null;
+
+  function startPad(){
+    if (!audioCtx) return;
+    try{
+      var now = audioCtx.currentTime;
+      var master = audioCtx.createGain();
+      master.gain.setValueAtTime(0, now);
+      master.gain.linearRampToValueAtTime(0.03, now + 2.2);
+
+      var filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(950, now);
+      filter.Q.setValueAtTime(0.6, now);
+
+      master.connect(filter).connect(audioCtx.destination);
+
+      var freqs = [146.83, 220.0, 293.66];
+      var oscs = [];
+      for (var i = 0; i < freqs.length; i++){
+        var o = audioCtx.createOscillator();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freqs[i], now);
+        o.detune.setValueAtTime((i - 1) * 3, now);
+        var og = audioCtx.createGain();
+        og.gain.setValueAtTime(i === 0 ? 1 : 0.5, now);
+        o.connect(og).connect(master);
+        o.start(now);
+        oscs.push({ osc: o, gain: og });
+      }
+
+      pad = { master: master, filter: filter, oscs: oscs };
+    }catch(e){}
+  }
+
+  function swellPad(peak, riseMs, fallMs){
+    if (!pad) return;
+    try{
+      var now = audioCtx.currentTime;
+      var g = pad.master.gain;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(g.value, now);
+      g.linearRampToValueAtTime(peak, now + riseMs / 1000);
+      g.linearRampToValueAtTime(0.03, now + riseMs / 1000 + fallMs / 1000);
+    }catch(e){}
+  }
+
+  function stopPad(fadeMs){
+    if (!pad) return;
+    try{
+      var now = audioCtx.currentTime;
+      pad.master.gain.cancelScheduledValues(now);
+      pad.master.gain.setValueAtTime(pad.master.gain.value, now);
+      pad.master.gain.linearRampToValueAtTime(0.0001, now + fadeMs / 1000);
+      for (var i = 0; i < pad.oscs.length; i++){
+        pad.oscs[i].osc.stop(now + fadeMs / 1000 + 0.05);
+      }
+    }catch(e){}
+  }
+
   function draw(){
     ctx.clearRect(0, 0, W, H);
 
-    // paths
     for (var i = 0; i < lines.length; i++){
       var ln = lines[i];
       var op = ln.opacity * dotsVisible;
@@ -293,16 +358,15 @@
       ctx.beginPath();
       ctx.moveTo(ln.x1, ln.y1);
       ctx.lineTo(ex, ey);
-      ctx.strokeStyle = 'rgba(' + ln.rgb + ',' + op.toFixed(3) + ')';
-      ctx.lineWidth = ln.width;
+      ctx.strokeStyle = 'rgba(' + ACCENT_RGB + ',' + op.toFixed(3) + ')';
+      ctx.lineWidth = 1.5;
       ctx.lineCap = 'round';
-      ctx.shadowColor = 'rgba(' + ln.rgb + ',' + (op * 0.5).toFixed(3) + ')';
-      ctx.shadowBlur = 9;
+      ctx.shadowColor = 'rgba(' + ACCENT_RGB + ',' + (op * 0.55).toFixed(3) + ')';
+      ctx.shadowBlur = 10;
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
 
-    // flashes / pulses
     for (var f = 0; f < flashes.length; f++){
       var fl = flashes[f];
       if (fl.opacity <= 0.003) continue;
@@ -313,7 +377,6 @@
       ctx.stroke();
     }
 
-    // particles (the dust that becomes AMISTAD)
     for (var p2 = 0; p2 < particles.length; p2++){
       var pt = particles[p2];
       var pop = pt.opacity * dotsVisible;
@@ -328,8 +391,6 @@
     }
   }
 
-  var ACCENT_RGB = '209,160,92';
-
   function loop(){
     if (!running) return;
     draw();
@@ -337,7 +398,6 @@
   }
   requestAnimationFrame(loop);
 
-  // ---------- geometry ----------
   function segmentIntersection(x1,y1,x2,y2,x3,y3,x4,y4){
     var denom = (y4-y3)*(x2-x1) - (x4-x3)*(y2-y1);
     if (Math.abs(denom) < 1e-6) return null;
@@ -346,7 +406,6 @@
     return { ua: ua, ub: ub, x: x1 + ua*(x2-x1), y: y1 + ua*(y2-y1) };
   }
 
-  // ---------- word sampling ----------
   function sampleWord(el, cap){
     var rect = el.getBoundingClientRect();
     var cs = window.getComputedStyle(el);
@@ -395,11 +454,13 @@
   }
 
   function doBloomFlash(){
-    animate(230, easeOutCubic, function(t){
-      bloomEl.style.opacity = (t * 0.85).toFixed(3);
+    swellPad(0.095, 250, 1300);
+    playChime();
+    animate(220, easeOutCubic, function(t){
+      bloomEl.style.opacity = (t * 0.9).toFixed(3);
     }).then(function(){
-      return animate(950, easeOutCubic, function(t){
-        bloomEl.style.opacity = (0.85 * (1 - t)).toFixed(3);
+      return animate(1000, easeOutCubic, function(t){
+        bloomEl.style.opacity = (0.9 * (1 - t)).toFixed(3);
       });
     });
   }
@@ -412,11 +473,12 @@
       try{
         var Ctx = window.AudioContext || window.webkitAudioContext;
         if (Ctx) audioCtx = new Ctx();
+        startPad();
       }catch(e){}
     }
     hintEl.classList.remove('visible');
     hintEl.classList.add('hiding');
-    await sleep(260);
+    await sleep(240);
   }
 
   async function scenePaths(){
@@ -425,12 +487,12 @@
     var lineA = {
       x1: margin, y1: H - margin,
       x2: W - margin, y2: margin,
-      progress: 0, opacity: 0, width: 1.4, rgb: ACCENT_RGB
+      progress: 0, opacity: 0
     };
     var lineB = {
       x1: W - margin, y1: H - margin * 1.05,
       x2: margin, y2: margin * 1.05,
-      progress: 0, opacity: 0, width: 1.4, rgb: ACCENT_RGB
+      progress: 0, opacity: 0
     };
     lines.push(lineA, lineB);
 
@@ -440,11 +502,9 @@
     );
     var tA = xsect ? Math.max(0, Math.min(1, xsect.ua)) : 0.5;
     var tB = xsect ? Math.max(0, Math.min(1, xsect.ub)) : 0.5;
-    var crossX = xsect ? xsect.x : W/2;
-    var crossY = xsect ? xsect.y : H/2;
 
-    var DUR = 1550;
-    var STAGGER = 480;
+    var DUR = 1350;
+    var STAGGER = 420;
     var t0 = performance.now();
 
     var doneA = animate(DUR, easeInOutCubic, function(t){
@@ -459,54 +519,39 @@
       lineB.opacity = t;
     });
 
-    pathMessageEl.textContent = 'Entre tantos caminos...';
-    pathMessageEl.classList.add('visible');
-
     var crossTimeA = DUR * tA;
     var crossTimeB = STAGGER + DUR * tB;
     var crossTime = Math.max(crossTimeA, crossTimeB);
     var elapsed = performance.now() - t0;
     await sleep(Math.max(0, crossTime - elapsed));
 
-    // the exact moment the two paths meet
-    playChime();
-    pathMessageEl.classList.remove('visible');
-
-    var flash = { x: crossX, y: crossY, r: 0, opacity: 0.6 };
-    flashes.push(flash);
-    animate(750, easeOutCubic, function(t){
-      flash.r = t * 46;
-      flash.opacity = 0.6 * (1 - t);
-    });
-    var flash2 = { x: crossX, y: crossY, r: 0, opacity: 0.35 };
-    flashes.push(flash2);
-    sleep(220).then(function(){
-      animate(800, easeOutCubic, function(t){
-        flash2.r = t * 60;
-        flash2.opacity = 0.35 * (1 - t);
-      });
-    });
-
-    await sleep(260);
-    pathMessageEl.textContent = 'Qué bonito coincidir.';
-    pathMessageEl.classList.add('visible');
-
     await Promise.all([doneA, doneB]);
-    await sleep(1450);
+    await sleep(220);
+
+    pathMessageEl.textContent = 'A veces no hace falta decir mucho...';
+    pathMessageEl.classList.add('visible');
+    await sleep(1250);
 
     pathMessageEl.classList.remove('visible');
-    await sleep(500);
+    await sleep(450);
+
+    pathMessageEl.classList.add('weighted');
+    pathMessageEl.textContent = 'Solo gracias.';
+    pathMessageEl.classList.add('visible');
+    await sleep(950);
+
+    pathMessageEl.classList.remove('visible');
+    await sleep(400);
 
     return { lineA: lineA, lineB: lineB };
   }
 
-  async function sceneTransformation(pathsData){
-    animate(500, easeInOutCubic, function(t){
+  async function sceneReveal(pathsData){
+    animate(450, easeInOutCubic, function(t){
       pathsData.lineA.opacity = 1 - t;
       pathsData.lineB.opacity = 1 - t;
     });
 
-    // dust sampled from the paths themselves — the lines become the letters
     var sourcePoints = [];
     var perLine = 42;
     for (var i = 0; i <= perLine; i++){
@@ -521,24 +566,23 @@
     });
     particles = pts;
 
-    await animate(420, easeOutCubic, function(t){
+    await animate(380, easeOutCubic, function(t){
       for (var i2 = 0; i2 < pts.length; i2++){ pts[i2].opacity = t * 0.85; }
     });
 
-    var samples = sampleWord(amistadEl, Math.min(pts.length, 190));
+    var samples = sampleWord(heroEl, Math.min(pts.length, 190));
     if (samples.length === 0){
-      await sleep(200);
-      amistadEl.style.transition = 'none';
+      heroEl.style.transition = 'none';
       doBloomFlash();
-      await animate(560, easeOutCubic, function(t){
+      await animate(600, easeOutCubic, function(t){
         dotsVisible = 1 - t;
-        amistadEl.style.opacity = t;
+        heroEl.style.opacity = t;
+        heroEl.style.transform = 'scale(' + lerp(0.86, 1, t).toFixed(3) + ')';
       });
-      amistadEl.classList.add('visible', 'breathe');
+      heroEl.classList.add('visible', 'breathe');
       return;
     }
 
-    // if we need more dust than the paths gave us, spawn extra near the crossing/centroid
     var cx = 0, cy = 0;
     for (var c = 0; c < pts.length; c++){ cx += pts[c].x; cy += pts[c].y; }
     cx /= pts.length; cy /= pts.length;
@@ -566,7 +610,7 @@
       pts[k].ty = s.y;
     }
 
-    await animate(1100, easeInOutCubic, function(t){
+    await animate(1000, easeInOutCubic, function(t){
       for (var m = 0; m < pts.length; m++){
         var pt = pts[m];
         pt.x = lerp(pt.startX, pt.tx, t);
@@ -576,27 +620,31 @@
       }
     });
 
-    await sleep(140);
+    await sleep(120);
 
-    amistadEl.style.transition = 'none';
+    heroEl.style.transition = 'none';
     doBloomFlash();
-    await animate(560, easeOutCubic, function(t){
+    await animate(600, easeOutExpo, function(t){
       dotsVisible = 1 - t;
-      amistadEl.style.opacity = t;
+      heroEl.style.opacity = t;
+      heroEl.style.transform = 'scale(' + lerp(0.86, 1, t).toFixed(3) + ')';
     });
 
-    amistadEl.classList.add('visible', 'breathe');
+    heroEl.classList.add('visible', 'breathe');
   }
 
-  async function sceneMessages(){
-    await sleep(1150);
-    messageMainEl.classList.add('visible');
-
-    await sleep(1500);
+  async function sceneClose(){
+    await sleep(850);
     messageSecondaryEl.classList.add('visible');
 
-    await sleep(1000);
+    await sleep(1150);
+    closingLineEl.classList.add('visible');
+
+    await sleep(1350);
     signatureEl.classList.add('visible');
+
+    await sleep(600);
+    stopPad(2200);
   }
 
   async function run(){
@@ -608,8 +656,8 @@
 
     await sceneInvitation();
     var pathsData = await scenePaths();
-    await sceneTransformation(pathsData);
-    await sceneMessages();
+    await sceneReveal(pathsData);
+    await sceneClose();
   }
 
   run();
