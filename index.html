@@ -250,6 +250,20 @@
     canvas.width = Math.round(W * DPR);
     canvas.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    fitHeroText();
+  }
+
+  function fitHeroText(){
+    if (!heroEl) return;
+    heroEl.style.fontSize = '';
+    var rect = heroEl.getBoundingClientRect();
+    var maxW = Math.min(window.innerWidth * 0.86, 640 * 0.86);
+    if (rect.width > maxW && rect.width > 0){
+      var cs = window.getComputedStyle(heroEl);
+      var currentPx = parseFloat(cs.fontSize);
+      var newPx = currentPx * (maxW / rect.width);
+      heroEl.style.fontSize = newPx.toFixed(2) + 'px';
+    }
   }
   resize();
   window.addEventListener('resize', resize);
@@ -289,7 +303,18 @@
         clearTimeout(timer);
         resolve(byUser);
       }
-      function onPointer(){ finish(true); }
+      function onPointer(){
+        if (!audioCtx){
+          try{
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx){
+              audioCtx = new Ctx();
+              if (audioCtx.state === 'suspended'){ audioCtx.resume(); }
+            }
+          }catch(e){}
+        }
+        finish(true);
+      }
       document.addEventListener('pointerdown', onPointer, { once:true });
       var timer = setTimeout(function(){ finish(false); }, timeoutMs);
     });
@@ -316,6 +341,7 @@
   function playMusic(){
     if (!audioCtx || !musicBuffer) return;
     try{
+      if (audioCtx.state === 'suspended'){ audioCtx.resume(); }
       var now = audioCtx.currentTime;
       musicSource = audioCtx.createBufferSource();
       musicSource.buffer = musicBuffer;
@@ -461,9 +487,6 @@
     var tapped = await waitForFirstInteraction(REDUCED ? 400 : 4200);
     if (tapped){
       try{
-        var Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) audioCtx = new Ctx();
-        if (audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume(); }
         await loadMusic();
         playMusic();
       }catch(e){}
@@ -649,6 +672,7 @@
         await Promise.race([document.fonts.ready, sleep(1200)]);
       }
     }catch(e){}
+    fitHeroText();
 
     await sceneInvitation();
     var pathsData = await scenePaths();
